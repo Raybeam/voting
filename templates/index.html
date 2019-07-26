@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.3.1/flatly/bootstrap.min.css">
+
+        <title>Raybeam All-hands Questions</title>
+    </head>
+    <body>
+        <nav class="navbar navbar-light bg-light">
+        <a class="navbar-brand" href="#">
+            <img src="http://raybeam.com/img/logo.png" width="40" height="40" alt="">
+        </a>
+        </nav>
+        <br />
+        
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <h1>Add {% if questions %} or vote for {% endif %}a question</h1>
+                </div>
+            </div>
+            {% if questions %}
+            <hr />
+            <div class="list-group">
+                    {% for question in questions %}
+                    <div class="list-group-item flex-column align-items-start">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h3>{{ question['question'] }}</h3>
+                            <div>
+                            <a href="/vote/{{ question['id'] }}">
+                            <span class="badge badge-primary badge-pill">{{ question['votes'] }}</span>
+                            </a>
+                            </div>
+                        </div>
+                        {{ question['asker'] }}
+                    </div>
+                    {% endfor %}
+            </div>
+            {% endif %}
+        <hr />
+            <div class="row">
+                <div class="col">
+                    <form action="/ask" method="POST">
+                        <div class="form-group">
+                            <label for="question">Ask Your Question</label>
+                            <textarea class="form-control" id="question" rows="3" name="question"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="asker">Who Are You?</label>
+                            <input type="text" class="form-control" id="asker" name="asker">
+
+                            <small id="emailHelp" class="form-text text-muted">Optional.</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
