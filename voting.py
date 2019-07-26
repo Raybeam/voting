@@ -7,6 +7,7 @@ import json
 import redis
 
 app = Flask(__name__)
+
 r = redis.StrictRedis(
     host='localhost', 
     port=6379, 
@@ -19,7 +20,6 @@ namespace = "voting"
 @app.route("/")
 def index():
     questions = get_active()
-    print(questions)
     return render_template('index.html', questions=questions)
 
 @app.route("/ask", methods=["POST"])
@@ -34,7 +34,6 @@ def vote(id):
     return redirect(url_for('index'))  
 
 def get_new_key():
-    print("%s_id_gen" %  namespace)
     id = r.incr("%s_id_gen" % namespace)
     return "%s:%d" % (namespace, id)
 
@@ -43,8 +42,6 @@ def get_active():
     for active in r.smembers('%s_active' % namespace):
         active = str(active)
         k = '%s:question' % active
-        print(k)
-        print(r.get(k))
         member = {
             'id': active,
             'question': r.get("%s:question" % active),
