@@ -1,6 +1,5 @@
 #!/bin/bash
 TARGET="${LC_COMMIT_HASH:-origin/master}"
-. .bashrc
 APP_DIR=~/voting
 cd "$APP_DIR"
 
@@ -19,7 +18,7 @@ echo "# Navigating to the backend directory."
 
 echo "# Activating virtualenv."
 set +e # The activate script might return non-zero even on success. 
-~/venv/bin/activate
+. ~/venv/bin/activate
 set -e
 
 echo "# Installing pip requirements."
