@@ -32,12 +32,14 @@ def index():
     return render_template('index.html', questions=questions)
 
 @app.route("/ask", methods=["POST"])
+@auth.ensure_logged_in
 def ask():
     result = request.form
     save_result(result)
     return redirect(url_for('index'))
 
 @app.route("/vote/<id>", methods=['GET'])
+@auth.ensure_logged_in
 def vote(id):
     r.incr("%s:votes" % id)
     return redirect(url_for('index'))
