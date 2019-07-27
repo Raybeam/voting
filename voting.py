@@ -26,7 +26,7 @@ def index():
 def ask():
     result = request.form
 
-    q = Question.new_question(owner=session['user_id'])
+    q = Question.new_question(session['user_id'])
     q.question = result['question']
     q.asker = result['asker']
     q.save()
@@ -45,7 +45,7 @@ def delete(id):
 @auth.ensure_logged_in
 def vote(id):
     q = Question.get(id)
-    q.vote_toggle()
+    q.vote_toggle(session['user_id'])
 
     return redirect(url_for('index'))
     

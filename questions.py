@@ -12,10 +12,10 @@ namespace = "voting"
 
 class Question:
     @classmethod
-    def new_question(cls, owner):
+    def new_question(cls, user_id):
         q = cls()
         q.id = cls.get_new_id()
-        q.owner = owner
+        q.owner = user_id
         return q
     
     @classmethod
@@ -65,11 +65,14 @@ class Question:
     def votes(self):
         return r.scard("%s:votes" % self.id)
 
-    def vote_toggle(self):
+    def vote_toggle(self, user_id):
+        if self.owner == user_id:
+            return
+
         k = "%s:votes" % self.id
-        removed = r.srem(k, self.owner)
+        removed = r.srem(k, user_id)
         if removed < 1:
-            r.sadd(k, self.owner)
+            r.sadd(k, user_id)
 
 def main():
     for q in Question.all():
