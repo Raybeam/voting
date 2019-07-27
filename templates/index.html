@@ -32,11 +32,20 @@
                             <h3>{{ question.question }}</h3>
                             <div>
                             <a href="/vote/{{ question.id }}">
-                            <span class="badge badge-primary badge-pill">{{ question.votes }}</span>
+                            <span class="badge badge-primary badge-pill">{{ question.votes() }}</span>
                             </a>
                             </div>
                         </div>
-                        {{ question.asker }}
+                        <div class="d-flex w-100 justify-content-between">
+                            {{ question.asker }}
+                            <div>
+                            {% if question.can_delete(session['user_id']) %}
+                            <a href="/delete/{{ question.id }}">
+                                Delete
+                            </a>
+                            {% endif %}
+                            </div>
+                        </div>
                     </div>
                     {% endfor %}
             </div>
