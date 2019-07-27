@@ -16,8 +16,6 @@ app = Flask(__name__)
 app.register_blueprint(auth.gauth)
 app.secret_key = settings.FLASK_SECRET
 
-
-
 @app.route("/")
 @auth.ensure_logged_in
 def index():
