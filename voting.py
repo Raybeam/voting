@@ -6,72 +6,42 @@ from flask import url_for
 from flask import session
 
 import json
-import redis
 import os
 
 import auth
 import settings
+from questions import Question
 
 app = Flask(__name__)
 app.register_blueprint(auth.gauth)
 app.secret_key = settings.FLASK_SECRET
 
-r = redis.StrictRedis(
-    host='localhost', 
-    port=6379, 
-    db=0, 
-    charset="utf-8", 
-    decode_responses=True
-    )
-namespace = "voting"
+
 
 @app.route("/")
 @auth.ensure_logged_in
 def index():
-    questions = get_active()
-    return render_template('index.html', questions=questions)
+    return render_template('index.html', questions=Question.active())
 
 @app.route("/ask", methods=["POST"])
 @auth.ensure_logged_in
 def ask():
     result = request.form
-    save_result(result)
+
+    q = Question.new_question()
+    q.question = result['question']
+    q.asker = result['asker']
+    q.save()
+
     return redirect(url_for('index'))
 
 @app.route("/vote/<id>", methods=['GET'])
 @auth.ensure_logged_in
 def vote(id):
-    r.incr("%s:votes" % id)
+    q = Question.get(id)
+    q.vote_for()
+
     return redirect(url_for('index'))
-
-def get_new_key():
-    id = r.incr("%s_id_gen" % namespace)
-    return "%s:%d" % (namespace, id)
-
-def get_active():
-    members = []
-    for active in r.smembers('%s_active' % namespace):
-        active = str(active)
-        k = '%s:question' % active
-        member = {
-            'id': active,
-            'question': r.get("%s:question" % active),
-            'asker': r.get("%s:asker" % active),
-            'votes': r.get("%s:votes" % active)
-        }
-        members.append(member)
-
-    return members
-
-def save_result(result):
-    k = get_new_key()
-    r.set("%s:question" % k, result['question'])
-    r.set("%s:asker" % k, result['asker'])
-    r.incr("%s:votes" % k)
-
-    r.sadd("%s_all" % namespace, k)
-    r.sadd("%s_active" % namespace, k)
-    
     
 
 if __name__ == '__main__':
