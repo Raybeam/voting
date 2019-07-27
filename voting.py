@@ -3,10 +3,18 @@ from flask import render_template
 from flask import request
 from flask import redirect
 from flask import url_for
+from flask import session
+
 import json
 import redis
+import os
+
+import auth
+import settings
 
 app = Flask(__name__)
+app.register_blueprint(auth.gauth)
+app.secret_key = settings.FLASK_SECRET
 
 r = redis.StrictRedis(
     host='localhost', 
@@ -18,20 +26,23 @@ r = redis.StrictRedis(
 namespace = "voting"
 
 @app.route("/")
+@auth.ensure_logged_in
 def index():
     questions = get_active()
     return render_template('index.html', questions=questions)
 
 @app.route("/ask", methods=["POST"])
+@auth.ensure_logged_in
 def ask():
     result = request.form
     save_result(result)
     return redirect(url_for('index'))
 
 @app.route("/vote/<id>", methods=['GET'])
+@auth.ensure_logged_in
 def vote(id):
     r.incr("%s:votes" % id)
-    return redirect(url_for('index'))  
+    return redirect(url_for('index'))
 
 def get_new_key():
     id = r.incr("%s_id_gen" % namespace)

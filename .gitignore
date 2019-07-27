@@ -1,3 +1,4 @@
+.env
 bin
 lib
 pip-selfcheck.json
