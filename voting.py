@@ -26,11 +26,8 @@ r = redis.StrictRedis(
 namespace = "voting"
 
 @app.route("/")
+@auth.ensure_logged_in
 def index():
-    access_token = session.get('access_token')
-    if access_token is None:
-        return redirect(url_for('login'))
-
     questions = get_active()
     return render_template('index.html', questions=questions)
 

@@ -1,7 +1,13 @@
 import settings
 
-from flask import Blueprint 
+from flask import Blueprint
+from flask import url_for
+from flask import redirect
+from flask import session
 from flask_oauth import OAuth
+
+from functools import wraps
+from functools import update_wrapper
 
 gauth = Blueprint('gauth', __name__, template_folder='templates')
 
@@ -24,8 +30,8 @@ google = oauth.remote_app('google',
 
 @gauth.route('/login')
 def login():
-    callback=url_for('authorized', _external=True)
-    return auth.google.authorize(callback=callback)
+    callback=url_for('gauth.authorized', _external=True)
+    return google.authorize(callback=callback)
 
 @gauth.route(settings.REDIRECT_URI)
 @google.authorized_handler
@@ -39,4 +45,17 @@ def get_access_token():
     return session.get('access_token')
 
 def is_logged_in():
-    return True if AUTH_TOKEN_KEY in flask.session else False
+    access_token = session.get('access_token')
+    if access_token is None:
+        return redirect(url_for('login'))
+
+def ensure_logged_in(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        access_token = session.get('access_token')
+        if access_token is None:
+            return redirect(url_for('gauth.login'))
+
+        return f(*args, **kwargs)
+
+    return update_wrapper(wrapper, f)
