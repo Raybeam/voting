@@ -12,15 +12,15 @@ namespace = "voting"
 
 class Question:
     @classmethod
-    def new_question(cls):
+    def new_question(cls, owner):
         q = cls()
         q.id = cls.get_new_id()
+        q.owner = owner
         return q
     
     @classmethod
     def active(cls):
-        for m in r.smembers('%s_active' % namespace):
-            yield cls.get(m)
+        return [cls.get(m) for m in r.smembers('%s_active' % namespace)]
     
     @classmethod
     def all(cls):
@@ -33,7 +33,8 @@ class Question:
         q.id = id
         q.question = r.get("%s:question" % id)
         q.asker = r.get("%s:asker" % id)
-        q.votes = r.get("%s:votes" % id)
+        q.owner = r.get("%s:owner" % id)
+
         return q
 
     @classmethod
@@ -41,16 +42,34 @@ class Question:
         id = r.incr("%s_id_gen" % namespace)
         return "%s:%d" % (namespace, id)
 
+    def can_delete(self, owner):
+        if self.owner != owner:
+            return False
+
+        if self.votes() > 0:
+            return False
+
+        return True
+
+    def delete(self):
+        r.srem("%s_active" % namespace, self.id)
+
     def save(self):
         r.set("%s:question" % self.id, self.question)
         r.set("%s:asker" % self.id, self.asker)
-        r.incr("%s:votes" % self.id)
+        r.set("%s:owner" % self.id, self.owner)
 
         r.sadd("%s_all" % namespace, self.id)
         r.sadd("%s_active" % namespace, self.id)
 
-    def vote_for(self):
-        r.incr("%s:votes" % self.id) 
+    def votes(self):
+        return r.scard("%s:votes" % self.id)
+
+    def vote_toggle(self):
+        k = "%s:votes" % self.id
+        removed = r.srem(k, self.owner)
+        if removed < 1:
+            r.sadd(k, self.owner)
 
 def main():
     for q in Question.all():
