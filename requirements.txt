@@ -1,6 +1,6 @@
 Click==7.0
 Flask==1.1.1
-Flask-OAuth==0.13
+git+https://github.com/mitsuhiko/flask-oauth#egg=Flask-OAuth
 gunicorn==19.9.0
 httplib2==0.13.0
 itsdangerous==1.1.0
