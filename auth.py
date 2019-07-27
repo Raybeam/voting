@@ -9,6 +9,11 @@ from flask_oauth import OAuth
 from functools import wraps
 from functools import update_wrapper
 
+from urllib.request import urlopen, Request
+from urllib.error import URLError
+import json
+import hashlib
+
 gauth = Blueprint('gauth', __name__, template_folder='templates')
 
 oauth = OAuth()
@@ -44,14 +49,11 @@ def authorized(resp):
 def get_access_token():
     return session.get('access_token')
 
-def is_logged_in():
-    access_token = session.get('access_token')
-    if access_token is None:
-        return redirect(url_for('login'))
-
 def ensure_logged_in(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
+        set_session()
+
         access_token = session.get('access_token')
         if access_token is None:
             return redirect(url_for('gauth.login'))
@@ -59,3 +61,25 @@ def ensure_logged_in(f):
         return f(*args, **kwargs)
 
     return update_wrapper(wrapper, f)
+
+def set_session():
+    headers = {'Authorization': 'OAuth '+session['access_token'][0]}
+    req = Request(
+        'https://www.googleapis.com/oauth2/v1/userinfo',
+        None,
+        headers
+    )
+
+    try:
+        res = urlopen(req)
+        user_info = json.loads(res.read())
+
+        h = hashlib.md5()
+        salted = "%s.%s" % (user_info['id'], settings.FLASK_SECRET)
+        h.update(salted.encode('utf-8'))
+        session['user_id'] = h.hexdigest()
+    except URLError as e:
+        print(e)
+        if e.code == 401:
+            session.pop('access_token', None)
+
