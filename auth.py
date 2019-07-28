@@ -63,6 +63,10 @@ def ensure_logged_in(f):
     return update_wrapper(wrapper, f)
 
 def set_session():
+    access_token = session.get('access_token')
+    if not access_token:
+        return
+
     headers = {'Authorization': 'OAuth '+session['access_token'][0]}
     req = Request(
         'https://www.googleapis.com/oauth2/v1/userinfo',
